@@ -2,7 +2,7 @@
 
 /*
     This file is part of Dash Ninja.
-    https://github.com/elbereth/dashninja-be
+    https://github.com/elbereth/pacninja-be
 
     Dash Ninja is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -77,7 +77,7 @@ $eventManager->attach('micro', function($event, $app) use ($mysqli) {
     // Now we need to check the peer is a known/allowed hub (via its client certificate and the remote address)
     $cacheserial = sha1($_SERVER['DN']);
     $cacheserial2 = sha1($_SERVER['REMOTE_ADDR']);
-    $cachefnam = CACHEFOLDER.sprintf("dashninja_cmd_hubcheck_%s_%s",$cacheserial,$cacheserial2);
+    $cachefnam = CACHEFOLDER.sprintf("pacninja_cmd_hubcheck_%s_%s",$cacheserial,$cacheserial2);
     $cachevalid = (is_readable($cachefnam) && ((filemtime($cachefnam)+7200)>=time()));
     if ($cachevalid) {
       $data = unserialize(file_get_contents($cachefnam));
@@ -381,7 +381,7 @@ $app->post('/blocks', function() use ($app,&$mysqli) {
   }
   else {
     // Retrieve all known nodes for current hub
-    $result = dashninja_cmd_getnodes($mysqli,$authinfo['HubId'],0);
+    $result = pacninja_cmd_getnodes($mysqli,$authinfo['HubId'],0);
     $numnodes = 0;
     $nodes = array();
     if (count($result) > 0) {
@@ -390,7 +390,7 @@ $app->post('/blocks', function() use ($app,&$mysqli) {
         $nodes[$nodename] = $row['NodeId'];
       }
     }
-    $result = dashninja_cmd_getnodes($mysqli,$authinfo['HubId'],1);
+    $result = pacninja_cmd_getnodes($mysqli,$authinfo['HubId'],1);
     if (count($result) > 0) {
         foreach($result as $nodename => $row){
             $numnodes++;
@@ -440,10 +440,10 @@ $app->post('/blocks', function() use ($app,&$mysqli) {
           return $response;
         }
         if ($curratio[0] > -1) {
-          $stats[] = sprintf("('mnpaymentratio','%s',%d,'dashninja')",$curratio[0],time());
+          $stats[] = sprintf("('mnpaymentratio','%s',%d,'pacninja')",$curratio[0],time());
         }
         if ($curratio[1] > -1) {
-          $stats[] = sprintf("('mnpaymentratiotest','%s',%d,'dashninja')",$curratio[1],time());
+          $stats[] = sprintf("('mnpaymentratiotest','%s',%d,'pacninja')",$curratio[1],time());
         }
       }
 
@@ -616,17 +616,17 @@ EOT;
             if ($row["BlockTestNet"] == 1) {
               $statkey .= "test";
             }
-            $stats[] = sprintf("('%s','%s',%d,'dashninja')",$statkey,$row["TotalSupplyValue"],time());
+            $stats[] = sprintf("('%s','%s',%d,'pacninja')",$statkey,$row["TotalSupplyValue"],time());
             $statkey = "paymentdrk";
             if ($row["BlockTestNet"] == 1) {
               $statkey .= "test";
             }
-            $stats[] = sprintf("('%s','%s',%d,'dashninja')",$statkey,$row["TotalMNValue"],time());
+            $stats[] = sprintf("('%s','%s',%d,'pacninja')",$statkey,$row["TotalMNValue"],time());
             $statkey = "mnpayments";
             if ($row["BlockTestNet"] == 1) {
               $statkey .= "test";
             }
-            $stats[] = sprintf("('%s','%s',%d,'dashninja')",$statkey,round(($row["NumPayed"]/$row["NumBlocks"])*100,2),time());
+            $stats[] = sprintf("('%s','%s',%d,'pacninja')",$statkey,round(($row["NumPayed"]/$row["NumBlocks"])*100,2),time());
           }
         }
       }
@@ -826,7 +826,7 @@ $app->get('/superblocksexpected', function() use ($app,&$mysqli) {
 });
 
 // Function to retrieve the masternode list
-function dashninja_masternodes_get($mysqli, $testnet = 0, $protocol = 0) {
+function pacninja_masternodes_get($mysqli, $testnet = 0, $protocol = 0) {
 
   $sqlmaxprotocol = sprintf("SELECT MAX(NodeProtocol) Protocol FROM cmd_nodes cn, cmd_nodes_status cns WHERE cn.NodeId = cns.NodeId AND NodeTestnet = %d GROUP BY NodeTestnet",$testnet);
   // Run the query
@@ -1524,9 +1524,9 @@ $app->get('/nodes', function() use ($app,&$mysqli) {
 
 });
 
-function dashninja_cmd_getnodes($mysqli,$hubid = -1,$testnet = 0) {
+function pacninja_cmd_getnodes($mysqli,$hubid = -1,$testnet = 0) {
 
-  $cachefnam = CACHEFOLDER.sprintf("dashninja_cmd_getnodes_%d_%d",$hubid,$testnet);
+  $cachefnam = CACHEFOLDER.sprintf("pacninja_cmd_getnodes_%d_%d",$hubid,$testnet);
   $cachevalid = (is_readable($cachefnam) && ((filemtime($cachefnam)+3600)>=time()));
   if ($cachevalid) {
     $nodes = unserialize(file_get_contents($cachefnam));
@@ -1600,7 +1600,7 @@ $app->post('/ping', function() use ($app,&$mysqli) {
   else {
     // Retrieve all known nodes for current hub
     $istestnet = intval($payload['testnet']);
-    $nodes = dashninja_cmd_getnodes($mysqli,$authinfo['HubId'],$istestnet);
+    $nodes = pacninja_cmd_getnodes($mysqli,$authinfo['HubId'],$istestnet);
     $numnodes = count($nodes);
     if ($numnodes > 0) {
       if ($numnodes == count($payload['nodes'])) {
@@ -2214,8 +2214,8 @@ $app->post('/ping', function() use ($app,&$mysqli) {
           $activemncount = 0;
           $uniquemnips = 0;
           dmn_masternodes_count($mysqli,$istestnet,$activemncount,$uniquemnips);
-          $sqlstats2[] = sprintf("('%s','%s',%d,'dashninja')",'mnactive',$activemncount,time());
-          $sqlstats2[] = sprintf("('%s','%s',%d,'dashninja')",'mnuniqiptest',$uniquemnips,time());
+          $sqlstats2[] = sprintf("('%s','%s',%d,'pacninja')",'mnactive',$activemncount,time());
+          $sqlstats2[] = sprintf("('%s','%s',%d,'pacninja')",'mnuniqiptest',$uniquemnips,time());
 
           $teststr = "";
           if ($istestnet == 1) {
@@ -2234,7 +2234,7 @@ $app->post('/ping', function() use ($app,&$mysqli) {
           $priceusd = $pricebtc*$tmp['usdbtc'];
           $activemncountath = $tmp["mnactiveath$teststr"];
           if ($activemncount > $activemncountath) {
-            $sqlstats2[] = sprintf("('%s','%s',%d,'dashninja')","mnactiveath$teststr",$activemncount,time());
+            $sqlstats2[] = sprintf("('%s','%s',%d,'pacninja')","mnactiveath$teststr",$activemncount,time());
           }
 
           $sqlstats[] = sprintf("(%d,NOW(),%d,%d,%01.9f,%01.9f,%01.9f)",
@@ -2249,20 +2249,20 @@ $app->post('/ping', function() use ($app,&$mysqli) {
           if ($istestnet == 1) {
             $statkey .= "test";
           }
-          $sqlstats2[] = sprintf("('%s','%s',%d,'dashninja')",$statkey,$networkhashps,time());
+          $sqlstats2[] = sprintf("('%s','%s',%d,'pacninja')",$statkey,$networkhashps,time());
           if ((isset($governancenextsuperblock)) && (!is_null($governancenextsuperblock)) && ($governancenextsuperblock > 0)) {
             $statkey = "governancesb";
             if ($istestnet == 1) {
               $statkey .= "test";
             }
-            $sqlstats2[] = sprintf("('%s','%s',%d,'dashninja')",$statkey,$governancenextsuperblock,time());
+            $sqlstats2[] = sprintf("('%s','%s',%d,'pacninja')",$statkey,$governancenextsuperblock,time());
           }
           if ((isset($governancebudget)) && (!is_null($governancebudget)) && ($governancebudget > 0)) {
             $statkey = "governancebudget";
             if ($istestnet == 1) {
               $statkey .= "test";
             }
-            $sqlstats2[] = sprintf("('%s','%s',%01.9f,'dashninja')", $statkey, $governancebudget, time());
+            $sqlstats2[] = sprintf("('%s','%s',%01.9f,'pacninja')", $statkey, $governancebudget, time());
           }
 
           $statsinfo = false;
@@ -2761,7 +2761,7 @@ $app->get('/portcheck/config', function() use ($app,&$mysqli) {
     $response->setJsonContent(array('status' => 'ERROR', 'messages' => 'Payload (or CONTENT_LENGTH) is missing'));
   }
   else {
-    $cachefnam = CACHEFOLDER."dashninja_cmd_portcheck_config";
+    $cachefnam = CACHEFOLDER."pacninja_cmd_portcheck_config";
     $cachevalid = (is_readable($cachefnam) && ((filemtime($cachefnam)+7200)>=time()));
     if ($cachevalid) {
       $config = unserialize(file_get_contents($cachefnam));
@@ -2933,7 +2933,7 @@ $app->post('/portcheck', function() use ($app,&$mysqli) {
 //   POST
 // Parameters (JSON body):
 //   thirdparties=array of keys/values (mandatory)
-//   dashwhale=array of keys/values (mandatory)
+//   pacwhale=array of keys/values (mandatory)
 // Result (JSON body):
 //   status=OK|ERROR
 //   messages=array of error messages (only if status is ERROR)
@@ -2952,7 +2952,7 @@ $app->post('/thirdparties', function() use ($app,&$mysqli) {
   if (!array_key_exists('CONTENT_LENGTH',$_SERVER) || (intval($_SERVER['CONTENT_LENGTH']) == 0)
       || !is_array($payload) || (count($payload) == 0)
       || !array_key_exists("thirdparties",$payload) || !is_array($payload["thirdparties"])
-      || !array_key_exists("dashwhale",$payload) || !is_array($payload["dashwhale"])) {
+      || !array_key_exists("pacwhale",$payload) || !is_array($payload["pacwhale"])) {
     //Change the HTTP status
     $response->setStatusCode(400, "Bad Request");
 
@@ -2992,7 +2992,7 @@ $app->post('/thirdparties', function() use ($app,&$mysqli) {
 
     // Dash Whale data
     $sqldwc = array();
-    foreach($payload["dashwhale"] as $proposal) {
+    foreach($payload["pacwhale"] as $proposal) {
       $dwinfo = var_export($proposal,true);
       if (is_array($proposal) && (count($proposal) == 2)
       && array_key_exists("proposal",$proposal) && is_array($proposal["proposal"])
@@ -3031,7 +3031,7 @@ $app->post('/thirdparties', function() use ($app,&$mysqli) {
     }
 
       if (count($sqldwc) > 0) {
-          $sql = "INSERT INTO cmd_budget_dashwhale_comments (BudgetHash, CommentHash, CommentUsername, CommentDate, "
+          $sql = "INSERT INTO cmd_budget_pacwhale_comments (BudgetHash, CommentHash, CommentUsername, CommentDate, "
                 ."CommentOrder, CommentLevel, CommentRecentPost, CommentByOwner, CommentReplyURL, CommentContent)"
                 ." VALUES ".implode(',',$sqldwc)
                 ." ON DUPLICATE KEY UPDATE CommentUsername = VALUES(CommentUsername), CommentDate = VALUES(CommentDate), "
@@ -3056,7 +3056,7 @@ $app->post('/thirdparties', function() use ($app,&$mysqli) {
     if (count($errors) == 0) {
         $response->setStatusCode(202, "Accepted");
         $response->setJsonContent(array('status' => 'OK', 'data' => array('thirdparties' => $statsinfo,
-                                                                          'dashwhale' => $dwinfo)));
+                                                                          'pacwhale' => $dwinfo)));
     }
     else {
         $response->setStatusCode(503, "Service Unavailable");
@@ -3071,7 +3071,7 @@ $app->post('/thirdparties', function() use ($app,&$mysqli) {
 // ============================================================================
 // VERSIONS
 // ----------------------------------------------------------------------------
-// End-point for creating new version of dashd to use by the nodes
+// End-point for creating new version of pacd to use by the nodes
 // HTTP method:
 //   POST
 // Parameters (JSON body):
